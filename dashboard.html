@@ -1,12 +1,74 @@
-<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard - JASON BUSINESS</title>
-<style>body{margin:0;background:#050a14;color:white;font-family:Arial;padding:20px} .card{padding:16px;border-radius:16px;background:rgba(0,210,255,.08);border:1px solid rgba(0,210,255,.2);margin-bottom:12px}</style>
-</head><body>
-<h2 style="color:#00d2ff">DASHBOARD JASON</h2>
-<div class="card">Total Commandes: <b id="total">0</b></div>
-<div id="list"></div>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - JASON BUSINESS</title>
+<style>
+:root{--blue:#00d2ff;--gold:#ffd700;--bg:#050a14}
+*{box-sizing:border-box;font-family:Arial}
+body{margin:0;background:var(--bg);color:white;min-height:100vh}
+header{display:flex;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);position:sticky;top:0;backdrop-filter:blur(10px)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px}
+.kpi{padding:16px;border-radius:18px;background:rgba(0,210,255,.08);border:1px solid rgba(0,210,255,.18)}
+.kpi b{font-size:28px;color:var(--gold);display:block}
+.list{padding:0 16px 80px}
+.row{display:grid;grid-template-columns:1fr auto;gap:8px;padding:14px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);margin-bottom:10px}
+.badge{padding:4px 10px;border-radius:999px;font-size:12px;background:rgba(255,215,0,.15);border:1px solid rgba(255,215,0,.3);color:var(--gold)}
+.btn{padding:8px 14px;border-radius:999px;border:1px solid rgba(0,210,255,.3);background:rgba(0,210,255,.1);color:white;cursor:pointer}
+</style>
+</head>
+<body>
+<header>
+<b style="color:var(--blue)">JASON <span style="color:var(--gold)">DASHBOARD</span></b>
+<div style="display:flex;gap:8px"><button class="btn" onclick="location.href='index.html'">Accueil</button><button class="btn" onclick="location.href='shop.html'">Shop</button></div>
+</header>
+
+<div class="kpis">
+<div class="kpi"><span>Total commandes</span><b id="total">0</b></div>
+<div class="kpi"><span>Revenu estimé</span><b id="revenu">0 FC</b></div>
+<div class="kpi"><span>Nouveaux aujourd'hui</span><b id="today">0</b></div>
+</div>
+
+<div class="list" id="list">Chargement depuis Firebase...</div>
+
 <script type="module">
-const res = await fetch('/api/commandes');
-const data = await res.json();
-document.getElementById('total').textContent = Object.keys(data).length;
-document.getElementById('list').innerHTML = Object.values(data).map(c=>`<div class=card>${c.nom} - ${c.service} - ${c.prix} FC</div>`).join('');
-</script></body></html>
+import { db } from "./Backend/firebase.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+async function load(){
+  try{
+    // Essaie API Vercel d'abord
+    let data = {};
+    try{
+      const r = await fetch('/api/commandes');
+      if(r.ok) data = await r.json();
+    }catch(e){}
+    
+    // Si vide, essaie direct Firebase
+    if(!data || Object.keys(data).length===0){
+      const snap = await get(ref(db, "commandes"));
+      data = snap.val() || {};
+    }
+
+    const arr = Object.entries(data).map(([id,v])=>({id,...v}));
+    document.getElementById('total').textContent = arr.length;
+    const totalFc = arr.reduce((s,c)=>s+(parseInt(c.prix)||0),0);
+    document.getElementById('revenu').textContent = totalFc.toLocaleString() + " FC";
+    const today = arr.filter(c=> Date.now() - (c.date||0) < 86400000).length;
+    document.getElementById('today').textContent = today;
+
+    document.getElementById('list').innerHTML = arr.reverse().map(c=>`
+      <div class=row>
+        <div><b>${c.nom||'Client'}</b> - ${c.service||'Service'}<br><small style="opacity:.6">${new Date(c.date||Date.now()).toLocaleString()}</small></div>
+        <div style="text-align:right"><div class=badge>${c.prix||0} FC</div><br><small style="opacity:.6">${c.status||'nouveau'}</small></div>
+      </div>
+    `).join('') || "Aucune commande pour l'instant. Partage ton shop.html";
+
+  }catch(e){
+    document.getElementById('list').innerHTML = "Erreur: "+e.message + "<br>Vérifie firebase.js";
+  }
+}
+load();
+</script>
+</body>
+</html>
