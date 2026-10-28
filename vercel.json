@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "builds": [{ "src": "Api/[...chemin].js", "use": "@vercel/node" }],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/Api/[...chemin].js" },
+    { "src": "/Backend/(.*)", "dest": "/Api/[...chemin].js" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
+}
