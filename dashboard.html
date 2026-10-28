@@ -1,0 +1,12 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard - JASON BUSINESS</title>
+<style>body{margin:0;background:#050a14;color:white;font-family:Arial;padding:20px} .card{padding:16px;border-radius:16px;background:rgba(0,210,255,.08);border:1px solid rgba(0,210,255,.2);margin-bottom:12px}</style>
+</head><body>
+<h2 style="color:#00d2ff">DASHBOARD JASON</h2>
+<div class="card">Total Commandes: <b id="total">0</b></div>
+<div id="list"></div>
+<script type="module">
+const res = await fetch('/api/commandes');
+const data = await res.json();
+document.getElementById('total').textContent = Object.keys(data).length;
+document.getElementById('list').innerHTML = Object.values(data).map(c=>`<div class=card>${c.nom} - ${c.service} - ${c.prix} FC</div>`).join('');
+</script></body></html>
