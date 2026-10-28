@@ -1,8 +1,5 @@
-// Backend/firebase.js - Version sécurisée Vercel
 import { initializeApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
-import { getAuth } from "firebase/auth";
-
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY || "AIzaSyA24pBo8mBWiZssPtep--MMBdB7c8_Lu4U",
   authDomain: "starlink-investit.firebaseapp.com",
@@ -12,8 +9,5 @@ const firebaseConfig = {
   messagingSenderId: "807081599583",
   appId: "1:807081599583:web:e00ec3959bc4acdae031ea"
 };
-
 const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
-export const auth = getAuth(app);
-export default app;
